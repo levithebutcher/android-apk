@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -36,9 +38,18 @@ jobs:
         continue-on-error: true
         run: |
           ./gradlew assembleDebug --stacktrace > build.log 2>&1
-          echo "=== GRADLE BUILD OUTPUT BEGIN ==="
           cat build.log
-          echo "=== GRADLE BUILD OUTPUT END ==="
+
+      - name: Push build log to git branch
+        if: always()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git checkout -B build-log-branch
+          cp build.log build_error.txt
+          git add build_error.txt
+          git commit -m "ci: upload build error log" || true
+          git push -f origin build-log-branch || true
 
       - name: Upload Build Log
         uses: actions/upload-artifact@v4
@@ -46,31 +57,6 @@ jobs:
           name: gradle-build-log
           path: build.log
 
-      - name: Find generated APKs
-        if: steps.gradle_build.outcome == 'success'
-        run: |
-          echo "=== Searching for generated APK files ==="
-          find app/build/outputs/ -name "*.apk" || true
-
-      - name: Upload APK Artifacts
-        uses: actions/upload-artifact@v4
-        if: steps.gradle_build.outcome == 'success'
-        with:
-          name: YouTubeDownloader-APKs
-          path: app/build/outputs/**/*.apk
-          if-no-files-found: warn
-
-      - name: Create GitHub Release with APK
-        uses: softprops/action-gh-release@v2
-        if: steps.gradle_build.outcome == 'success' && github.ref == 'refs/heads/main'
-        with:
-          tag_name: "v1.0.0"
-          name: "YouTube Downloader v1.0.0 APK"
-          body: "Standalone on-device YouTube video and audio downloader Android APK built with youtubedl-android and Jetpack Compose."
-          files: app/build/outputs/**/*.apk
-
       - name: Fail if build failed
         if: steps.gradle_build.outcome != 'success'
-        run: |
-          echo "Build failed! See build.log above."
-          exit 1
+        run: exit 1
