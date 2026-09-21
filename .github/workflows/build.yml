@@ -7,6 +7,9 @@ on:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,18 +32,25 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Debug APK with Gradle
-        run: ./gradlew assembleDebug --stacktrace 2>&1 | tee build.log
+        run: ./gradlew assembleDebug --stacktrace
 
-      - name: Upload Build Log
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: gradle-build-log
-          path: build.log
+      - name: Find generated APKs
+        run: |
+          echo "=== Searching for generated APK files ==="
+          find app/build/outputs/ -name "*.apk" || true
 
       - name: Upload APK Artifacts
         uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: YouTubeDownloader-APKs
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/**/*.apk
+          if-no-files-found: warn
+
+      - name: Create GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: "v1.0.0"
+          name: "YouTube Downloader v1.0.0 APK"
+          body: "Standalone on-device YouTube video and audio downloader Android APK built with youtubedl-android and Jetpack Compose."
+          files: app/build/outputs/**/*.apk
