@@ -32,15 +32,29 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Debug APK with Gradle
-        run: ./gradlew assembleDebug --stacktrace
+        id: gradle_build
+        continue-on-error: true
+        run: |
+          ./gradlew assembleDebug --stacktrace > build.log 2>&1
+          echo "=== GRADLE BUILD OUTPUT BEGIN ==="
+          cat build.log
+          echo "=== GRADLE BUILD OUTPUT END ==="
+
+      - name: Upload Build Log
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-log
+          path: build.log
 
       - name: Find generated APKs
+        if: steps.gradle_build.outcome == 'success'
         run: |
           echo "=== Searching for generated APK files ==="
           find app/build/outputs/ -name "*.apk" || true
 
       - name: Upload APK Artifacts
         uses: actions/upload-artifact@v4
+        if: steps.gradle_build.outcome == 'success'
         with:
           name: YouTubeDownloader-APKs
           path: app/build/outputs/**/*.apk
@@ -48,9 +62,15 @@ jobs:
 
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/main'
+        if: steps.gradle_build.outcome == 'success' && github.ref == 'refs/heads/main'
         with:
           tag_name: "v1.0.0"
           name: "YouTube Downloader v1.0.0 APK"
           body: "Standalone on-device YouTube video and audio downloader Android APK built with youtubedl-android and Jetpack Compose."
           files: app/build/outputs/**/*.apk
+
+      - name: Fail if build failed
+        if: steps.gradle_build.outcome != 'success'
+        run: |
+          echo "Build failed! See build.log above."
+          exit 1
