@@ -8,7 +8,7 @@ activityCompose = "1.9.3"
 composeBom = "2024.11.00"
 workRuntimeKtx = "2.10.0"
 coilCompose = "2.7.0"
-youtubedlAndroid = "0.18.1"
+youtubedlAndroid = "0.14.0"
 coroutines = "1.9.0"
 
 [libraries]
@@ -25,8 +25,8 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilCompose" }
-youtubedl-library = { group = "io.github.junkfood02.youtubedl-android", name = "library", version.ref = "youtubedlAndroid" }
-youtubedl-ffmpeg = { group = "io.github.junkfood02.youtubedl-android", name = "ffmpeg", version.ref = "youtubedlAndroid" }
+youtubedl-library = { group = "com.github.yausername.youtubedl-android", name = "library", version.ref = "youtubedlAndroid" }
+youtubedl-ffmpeg = { group = "com.github.yausername.youtubedl-android", name = "ffmpeg", version.ref = "youtubedlAndroid" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
 [plugins]
