@@ -22,8 +22,8 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Android SDK Licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -33,6 +33,16 @@ jobs:
 
       - name: Upload APK Artifacts
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: YouTubeDownloader-APKs
           path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload Build Reports on Failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-reports
+          path: |
+            app/build/reports/
+            app/build/outputs/logs/
