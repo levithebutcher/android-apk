@@ -48,7 +48,7 @@ jobs:
           git checkout -B build-log-branch
           cp build.log build_error.txt
           git add build_error.txt
-          git commit -m "ci: upload build error log" || true
+          git commit -m "ci: upload build log" || true
           git push -f origin build-log-branch || true
 
       - name: Upload Build Log
@@ -56,6 +56,23 @@ jobs:
         with:
           name: gradle-build-log
           path: build.log
+
+      - name: Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        if: steps.gradle_build.outcome == 'success'
+        with:
+          name: YouTubeDownloader-APKs
+          path: app/build/outputs/apk/**/*.apk
+
+      - name: Create GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        if: steps.gradle_build.outcome == 'success' && github.ref == 'refs/heads/main'
+        with:
+          tag_name: "v1.0.0"
+          name: "YouTube Downloader v1.0.0 APK"
+          body: "Standalone on-device YouTube video and audio downloader Android APK built with youtubedl-android and Jetpack Compose."
+          files: app/build/outputs/apk/**/*.apk
+          fail_on_unmatched_files: false
 
       - name: Fail if build failed
         if: steps.gradle_build.outcome != 'success'
